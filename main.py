@@ -5,7 +5,7 @@ import torch
 
 app = FastAPI()
 
-# Load model and tokenizer directly
+# Load lightweight model and tokenizer
 tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
 model = AutoModelForCausalLM.from_pretrained("sshleifer/tiny-gpt2")
 
@@ -18,10 +18,14 @@ async def chat(request: Request):
     data = await request.json()
     user_input = data["prompt"]
 
-    # Build prompt
+    # Format prompt with assistant personality
     prompt = f"You are Nova, a helpful and friendly AI assistant.\nUser: {user_input}\nAI:"
     inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(**inputs, max_new_tokens=50, pad_token_id=tokenizer.eos_token_id)
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=50,
+        pad_token_id=tokenizer.eos_token_id
+    )
     response = tokenizer.decode(outputs[0], skip_special_tokens=True).split("AI:")[-1].strip()
 
     return {"response": response}

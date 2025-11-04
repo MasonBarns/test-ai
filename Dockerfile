@@ -4,8 +4,10 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install dependencies
+RUN pip install --upgrade pip
+RUN pip install fastapi uvicorn transformers torch
 
-EXPOSE 3000
+EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
