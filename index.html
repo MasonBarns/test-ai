@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nova Chatbot</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; }
+    .chat { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; }
+    .user, .ai { margin: 10px 0; }
+    .user { text-align: right; color: blue; }
+    .ai { text-align: left; color: green; }
+  </style>
+</head>
+<body>
+  <h1>Chat with Nova 🤖</h1>
+  <div class="chat" id="chat"></div>
+  <textarea id="prompt" rows="2" cols="50"></textarea><br>
+  <button onclick="send()">Send</button>
+
+  <script>
+    async function send() {
+      const prompt = document.getElementById("prompt").value;
+      const chat = document.getElementById("chat");
+      chat.innerHTML += `<div class="user">You: ${prompt}</div>`;
+      document.getElementById("prompt").value = "";
+
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      chat.innerHTML += `<div class="ai">Nova: ${data.response}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+</body>
+</html>

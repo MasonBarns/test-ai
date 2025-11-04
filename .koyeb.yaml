@@ -1,0 +1,10 @@
+name: nova-chatbot
+builder:
+  type: docker
+ports:
+  - port: 3000
+    protocol: http
+healthcheck:
+  path: /chat
+  interval: 10s
+  timeout: 5s
