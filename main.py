@@ -1,11 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
 
 app = FastAPI()
 
-# Load lightweight model and tokenizer
+# Load a tiny model that fits Koyeb's free tier
 tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
 model = AutoModelForCausalLM.from_pretrained("sshleifer/tiny-gpt2")
 

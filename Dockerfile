@@ -1,12 +1,11 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 WORKDIR /app
 
 COPY . .
 
-# Upgrade pip and install dependencies
 RUN pip install --upgrade pip
-RUN pip install fastapi uvicorn transformers torch
+RUN pip install fastapi uvicorn transformers
 
 EXPOSE 8000
 
