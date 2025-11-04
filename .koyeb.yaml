@@ -5,6 +5,6 @@ ports:
   - port: 3000
     protocol: http
 healthcheck:
-  path: /chat
+  path: /
   interval: 10s
   timeout: 5s
