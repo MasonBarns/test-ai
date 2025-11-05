@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-jinja2
-requests
-httpx
-transformers
-torch==2.1.0+cpu  # CPU-only version to save space
