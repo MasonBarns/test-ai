@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . .
 
 RUN pip install --upgrade pip \
- && pip install fastapi uvicorn transformers
+ && pip install fastapi uvicorn transformers torch==2.1.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 
 EXPOSE 8000
 
