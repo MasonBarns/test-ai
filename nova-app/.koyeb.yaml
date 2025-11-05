@@ -1,12 +1,18 @@
 name: nova
-build:
-  steps:
-    - pip install -r requirements.txt
+builder: docker
+dockerfile: Dockerfile
 
-run:
-  cmd: uvicorn main:app --host 0.0.0.0 --port 8080
-  healthcheck:
-    http_path: /
-    interval: 10s
-    timeout: 5s
-    retries: 3
+ports:
+  - port: 8000
+    protocol: http
+    public: true
+
+routes:
+  - type: http
+    path: /
+    destination:
+      port: 8000
+
+env:
+  OPENROUTER_API_KEY: "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"
+  NOVA_PERSONA: "default"
