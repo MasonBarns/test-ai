@@ -3,34 +3,60 @@
 <head>
   <title>Nova Chatbot</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; }
-    .chat { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; }
-    .user, .ai { margin: 10px 0; }
-    .user { text-align: right; color: blue; }
-    .ai { text-align: left; color: green; }
+    body { font-family: sans-serif; display: flex; margin: 0; }
+    #sidebar { width: 300px; background: #f4f4f4; padding: 1em; overflow-y: auto; }
+    #main { flex: 1; padding: 2em; }
+    #chat { margin-bottom: 1em; }
+    textarea { width: 100%; height: 60px; }
+    button { margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>Chat with Nova 🤖</h1>
-  <div class="chat" id="chat"></div>
-  <textarea id="prompt" rows="2" cols="50"></textarea><br>
-  <button onclick="send()">Send</button>
+  <div id="sidebar">
+    <h3>Chat History</h3>
+    <div id="history"></div>
+  </div>
+  <div id="main">
+    <h2 id="welcome">Welcome</h2>
+    <input type="email" id="email" placeholder="Enter your email" />
+    <div id="chat"></div>
+    <textarea id="prompt" placeholder="Ask anything..."></textarea>
+    <button onclick="send()">Send</button>
+  </div>
 
   <script>
     async function send() {
       const prompt = document.getElementById("prompt").value;
+      const email = document.getElementById("email").value;
       const chat = document.getElementById("chat");
-      chat.innerHTML += `<div class="user">You: ${prompt}</div>`;
+      const historyPanel = document.getElementById("history");
+      const welcome = document.getElementById("welcome");
+
+      if (!email) {
+        alert("Please enter your email.");
+        return;
+      }
+
+      welcome.innerText = `Welcome, ${email}`;
+      chat.innerHTML += `<p><strong>You:</strong> ${prompt}</p>`;
       document.getElementById("prompt").value = "";
 
       const res = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt, email })
       });
+
       const data = await res.json();
-      chat.innerHTML += `<div class="ai">Nova: ${data.response}</div>`;
-      chat.scrollTop = chat.scrollHeight;
+      chat.innerHTML += `<p><strong>Nova:</strong> ${data.response}</p>`;
+
+      // Update sidebar history
+      historyPanel.innerHTML = "";
+      data.history.forEach(entry => {
+        if (entry.email === email) {
+          historyPanel.innerHTML += `<p><strong>You:</strong> ${entry.prompt}<br><strong>Nova:</strong> ${entry.response}</p><hr>`;
+        }
+      });
     }
   </script>
 </body>

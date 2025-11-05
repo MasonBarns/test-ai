@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --upgrade pip
-RUN pip install fastapi uvicorn transformers
+RUN pip install --upgrade pip \
+ && pip install fastapi uvicorn transformers
 
 EXPOSE 8000
 

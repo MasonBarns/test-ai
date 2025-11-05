@@ -1,12 +1,13 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, T5ForConditionalGeneration
 
 app = FastAPI()
 
-# Load a tiny model that fits Koyeb's free tier
-tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
-model = AutoModelForCausalLM.from_pretrained("sshleifer/tiny-gpt2")
+tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
+model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-small")
+
+chat_history = []
 
 @app.get("/")
 def serve_frontend():
@@ -16,15 +17,13 @@ def serve_frontend():
 async def chat(request: Request):
     data = await request.json()
     user_input = data["prompt"]
+    user_email = data["email"]
 
-    # Format prompt with assistant personality
-    prompt = f"You are Nova, a helpful and friendly AI assistant.\nUser: {user_input}\nAI:"
+    prompt = f"Respond helpfully and kindly: {user_input}"
     inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=50,
-        pad_token_id=tokenizer.eos_token_id
-    )
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True).split("AI:")[-1].strip()
+    output = model.generate(**inputs, max_new_tokens=100)
+    response = tokenizer.decode(output[0], skip_special_tokens=True)
 
-    return {"response": response}
+    chat_history.append({"email": user_email, "prompt": user_input, "response": response})
+
+    return {"response": response, "history": chat_history}
