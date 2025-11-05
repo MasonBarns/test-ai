@@ -8,10 +8,10 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# LangSearch API
+# LangSearch API key
 LANGSEARCH_API_KEY = "sk-dcb31d322a8e4cda94ad1d1630afb5af"
 
-# OpenRouter API
+# OpenRouter API key and model
 OPENROUTER_API_KEY = "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"
 OPENROUTER_MODEL = "mistralai/mistral-7b-instruct"
 
@@ -30,8 +30,8 @@ def search_langsearch(query):
         data = res.json()
         if "results" in data and data["results"]:
             return data["results"][0]["content"]
-    except Exception:
-        pass
+    except Exception as e:
+        print("LangSearch error:", e)
     return None
 
 def fallback_openrouter(prompt):
@@ -48,9 +48,11 @@ def fallback_openrouter(prompt):
     }
     try:
         res = requests.post(url, headers=headers, json=payload)
+        res.raise_for_status()
         data = res.json()
         return data["choices"][0]["message"]["content"]
-    except Exception:
+    except Exception as e:
+        print("OpenRouter error:", e)
         return "Nova couldn't generate a response."
 
 @app.get("/", response_class=HTMLResponse)
