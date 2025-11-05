@@ -2,3 +2,4 @@ fastapi
 uvicorn
 transformers
 torch==2.9.0+cpu
+jinja2
