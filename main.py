@@ -1,11 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
-from transformers import AutoTokenizer, T5ForConditionalGeneration
+from transformers import pipeline
 
 app = FastAPI()
 
-tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
-model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-small")
+chatbot = pipeline("text-generation", model="sshleifer/tiny-gpt2")
 
 chat_history = {}
 
@@ -19,13 +18,8 @@ async def chat(request: Request):
     user_input = data["prompt"]
     user_email = data["email"]
 
-    prompt = f"Respond helpfully and kindly: {user_input}"
-    inputs = tokenizer(prompt, return_tensors="pt")
-    output = model.generate(**inputs, max_new_tokens=100)
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
+    prompt = f"You are Nova, a helpful and friendly AI assistant.\nUser: {user_input}\nAI:"
+    response = chatbot(prompt, max_new_tokens=50)[0]["generated_text"].split("AI:")[-1].strip()
 
-    if user_email not in chat_history:
-        chat_history[user_email] = []
-    chat_history[user_email].append({"prompt": user_input, "response": response})
-
+    chat_history.setdefault(user_email, []).append({"prompt": user_input, "response": response})
     return {"response": response, "history": chat_history[user_email]}
