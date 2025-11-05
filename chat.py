@@ -1,6 +1,7 @@
 # chat.py
 from fastapi import APIRouter, Request
-from transformers import AutoTokenizer, T5ForConditionalGeneration
+from transformers import pipeline
+
 
 router = APIRouter()
 tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
