@@ -2,18 +2,18 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from transformers import pipeline
 import requests
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# LangSearch API key
+# LangSearch API
 LANGSEARCH_API_KEY = "sk-dcb31d322a8e4cda94ad1d1630afb5af"
 
-# GPT fallback model
-chatbot = pipeline("text-generation", model="sshleifer/tiny-gpt2")
+# OpenRouter API
+OPENROUTER_API_KEY = "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"
+OPENROUTER_MODEL = "mistralai/mistral-7b-instruct"
 
 def search_langsearch(query):
     url = "https://api.langsearch.com/search"
@@ -34,6 +34,25 @@ def search_langsearch(query):
         pass
     return None
 
+def fallback_openrouter(prompt):
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": OPENROUTER_MODEL,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+    try:
+        res = requests.post(url, headers=headers, json=payload)
+        data = res.json()
+        return data["choices"][0]["message"]["content"]
+    except Exception:
+        return "Nova couldn't generate a response."
+
 @app.get("/", response_class=HTMLResponse)
 def serve_ui(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -45,7 +64,6 @@ async def chat(request: Request):
 
     response = search_langsearch(prompt)
     if not response or response.strip() == "":
-        result = chatbot(prompt, max_length=100, do_sample=True)
-        response = result[0]["generated_text"]
+        response = fallback_openrouter(prompt)
 
     return JSONResponse(content={"response": response})

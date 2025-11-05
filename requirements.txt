@@ -2,5 +2,4 @@ fastapi
 uvicorn
 jinja2
 requests
-transformers
-torch==2.9.0+cpu
+httpx
