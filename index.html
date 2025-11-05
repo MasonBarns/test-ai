@@ -50,12 +50,9 @@
       const data = await res.json();
       chat.innerHTML += `<p><strong>Nova:</strong> ${data.response}</p>`;
 
-      // Update sidebar history
       historyPanel.innerHTML = "";
       data.history.forEach(entry => {
-        if (entry.email === email) {
-          historyPanel.innerHTML += `<p><strong>You:</strong> ${entry.prompt}<br><strong>Nova:</strong> ${entry.response}</p><hr>`;
-        }
+        historyPanel.innerHTML += `<p><strong>You:</strong> ${entry.prompt}<br><strong>Nova:</strong> ${entry.response}</p><hr>`;
       });
     }
   </script>

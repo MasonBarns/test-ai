@@ -7,7 +7,7 @@ app = FastAPI()
 tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
 model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-small")
 
-chat_history = []
+chat_history = {}
 
 @app.get("/")
 def serve_frontend():
@@ -24,6 +24,8 @@ async def chat(request: Request):
     output = model.generate(**inputs, max_new_tokens=100)
     response = tokenizer.decode(output[0], skip_special_tokens=True)
 
-    chat_history.append({"email": user_email, "prompt": user_input, "response": response})
+    if user_email not in chat_history:
+        chat_history[user_email] = []
+    chat_history[user_email].append({"prompt": user_input, "response": response})
 
-    return {"response": response, "history": chat_history}
+    return {"response": response, "history": chat_history[user_email]}
