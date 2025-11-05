@@ -1,21 +1,20 @@
 # auth.py
-from fastapi import APIRouter, HTTPException
-from passlib.hash import bcrypt
-from models import User
+from fastapi import Request
 
-users_db = {}
+# In-memory user store (for demo purposes only)
+active_users = {}
 
-router = APIRouter()
+def register_user(email: str):
+    if email not in active_users:
+        active_users[email] = {"history": []}
+    return active_users[email]
 
-@router.post("/signup")
-def signup(user: User):
-    if user.email in users_db:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    users_db[user.email] = bcrypt.hash(user.password)
-    return {"message": "User created"}
+def get_user_history(email: str):
+    return active_users.get(email, {}).get("history", [])
 
-@router.post("/login")
-def login(user: User):
-    if user.email not in users_db or not bcrypt.verify(user.password, users_db[user.email]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"message": "Login successful"}
+def save_to_history(email: str, prompt: str, response: str):
+    if email in active_users:
+        active_users[email]["history"].append({
+            "prompt": prompt,
+            "response": response
+        })

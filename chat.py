@@ -1,15 +1,54 @@
+# chat.py
 from fastapi import APIRouter, Request
-from transformers import AutoTokenizer, T5ForConditionalGeneration
-import torch
+from fastapi.responses import JSONResponse
+import requests
+from auth import register_user, get_user_history, save_to_history
 
 router = APIRouter()
 
-# Load model and tokenizer once at startup
-tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
-model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-small")
+# API keys
+LANGSEARCH_API_KEY = "sk-dcb31d322a8e4cda94ad1d1630afb5af"
+OPENROUTER_API_KEY = "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"
+OPENROUTER_MODEL = "mistralai/mistral-7b-instruct"
 
-# Store chat history per user
-chat_history = {}
+def search_langsearch(query):
+    url = "https://api.langsearch.com/search"
+    headers = {
+        "Authorization": f"Bearer {LANGSEARCH_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "query": query,
+        "num_results": 1
+    }
+    try:
+        res = requests.post(url, headers=headers, json=payload)
+        data = res.json()
+        if "results" in data and data["results"]:
+            return data["results"][0]["content"]
+    except Exception as e:
+        print("LangSearch error:", e)
+    return None
+
+def fallback_openrouter(prompt):
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": OPENROUTER_MODEL,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+    try:
+        res = requests.post(url, headers=headers, json=payload)
+        data = res.json()
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print("OpenRouter error:", e)
+        return "Nova couldn't generate a response."
 
 @router.post("/chat")
 async def chat(request: Request):
@@ -18,21 +57,15 @@ async def chat(request: Request):
     prompt = data.get("prompt")
 
     if not email or not prompt:
-        return {"error": "Missing email or prompt."}
+        return JSONResponse(content={"error": "Missing email or prompt"}, status_code=400)
 
-    # Format input and generate response
-    inputs = tokenizer(f"Respond helpfully: {prompt}", return_tensors="pt")
-    with torch.no_grad():
-        output = model.generate(**inputs, max_new_tokens=100)
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
+    register_user(email)
 
-    # Save to history
-    chat_history.setdefault(email, []).append({
-        "prompt": prompt,
-        "response": response
-    })
+    response = search_langsearch(prompt)
+    if not response or response.strip() == "":
+        response = fallback_openrouter(prompt)
 
-    return {
-        "response": response,
-        "history": chat_history[email]
-    }
+    save_to_history(email, prompt, response)
+    history = get_user_history(email)
+
+    return JSONResponse(content={"response": response, "history": history})
