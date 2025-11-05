@@ -12,7 +12,7 @@ templates = Jinja2Templates(directory="templates")
 LANGSEARCH_API_KEY = "sk-dcb31d322a8e4cda94ad1d1630afb5af"
 
 # OpenRouter API key and model
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_MODEL = "mistralai/mistral-7b-instruct"
 
 def search_langsearch(query):

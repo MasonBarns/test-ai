@@ -4,4 +4,4 @@ jinja2
 requests
 httpx
 transformers
-torch
+torch==2.1.0+cpu  # CPU-only version to save space
