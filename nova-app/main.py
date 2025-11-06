@@ -10,5 +10,5 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(chat_router)
 
 @app.get("/", response_class=HTMLResponse)
-def serve_ui(request: Request):
+async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
