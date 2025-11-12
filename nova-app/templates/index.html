@@ -5,15 +5,13 @@
   <title>Nova</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/static/style.css" />
-
-  <!-- Firebase SDKs (modular v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="brand">Nova</div>
+  <div class="nova-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">🌟 Nova</div>
       <div class="auth">
         <button id="login-btn" class="btn primary">Sign in with Google</button>
         <div id="user-info" class="user-info"></div>
@@ -25,21 +23,21 @@
     </aside>
 
     <main class="main">
-      <div class="toolbar">
+      <div class="chat-window">
+        <div id="chat-log" class="chat-log"></div>
+        <form id="chat-form" class="chat-form" style="display:none;">
+          <input type="text" id="prompt" placeholder="Ask Nova anything..." required />
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+      </div>
+
+      <div class="search-bar">
         <form id="search-form">
           <input id="search-input" placeholder="Search Wikipedia for verified info..." />
           <button class="btn">Search</button>
         </form>
         <div id="search-result" class="search-result"></div>
       </div>
-
-      <section class="chat">
-        <form id="chat-form" class="chat-form" style="display:none;">
-          <input type="text" id="prompt" placeholder="Ask Nova anything..." required />
-          <button class="btn primary" type="submit">Send</button>
-        </form>
-        <div id="response" class="response"></div>
-      </section>
     </main>
   </div>
 

@@ -1,9 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-// Replace with your Firebase web config (from your console)
+// 🔐 Firebase config (replace with yours)
 const firebaseConfig = {
-  apiKey: "AIzaSyDkJ0ZxgYQZkJH8xFZkJH8xFZkJH8xFZkJH8", // from your screenshot
+  apiKey: "AIzaSyDkJ0ZxgYQZkJH8xFZkJH8xFZkJH8xFZkJH8",
   authDomain: "test.firebaseapp.com",
   projectId: "test",
   appId: "1:107141014701:web:2b2e3e7f3e2e2e2e2e2e2e"
@@ -13,12 +18,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Elements
+// 🌐 DOM Elements
 const loginBtn = document.getElementById("login-btn");
 const userInfoEl = document.getElementById("user-info");
 const chatForm = document.getElementById("chat-form");
 const promptInput = document.getElementById("prompt");
-const responseEl = document.getElementById("response");
+const chatLog = document.getElementById("chat-log");
 const chatListEl = document.getElementById("chat-list");
 const searchForm = document.getElementById("search-form");
 const searchInput = document.getElementById("search-input");
@@ -26,20 +31,22 @@ const searchResultEl = document.getElementById("search-result");
 
 let currentUser = null;
 
+// 🔐 Login
 loginBtn.addEventListener("click", async () => {
   try {
     const result = await signInWithPopup(auth, provider);
     currentUser = result.user;
-  } catch (e) {
-    alert("Login failed: " + e.message);
+  } catch (err) {
+    alert("Login failed: " + err.message);
   }
 });
 
+// 🔄 Auth state
 onAuthStateChanged(auth, (user) => {
   currentUser = user || null;
   if (user) {
     loginBtn.style.display = "none";
-    userInfoEl.textContent = `${user.displayName} (${user.email})`;
+    userInfoEl.textContent = `Welcome, ${user.displayName}`;
     chatForm.style.display = "flex";
     loadChats();
   } else {
@@ -47,36 +54,35 @@ onAuthStateChanged(auth, (user) => {
     userInfoEl.textContent = "";
     chatForm.style.display = "none";
     chatListEl.innerHTML = "";
-    responseEl.textContent = "";
+    chatLog.innerHTML = "";
   }
 });
 
-// Load recent chats
+// 📚 Load recent chats
 async function loadChats() {
   if (!currentUser) return;
-  const url = `/api/chats?user_id=${encodeURIComponent(currentUser.uid)}`;
-  const res = await fetch(url);
+  const res = await fetch(`/api/chats?user_id=${encodeURIComponent(currentUser.uid)}`);
   const data = await res.json();
   chatListEl.innerHTML = "";
-  for (const item of data.items) {
+  data.items.forEach(item => {
     const li = document.createElement("li");
     li.textContent = item.prompt.slice(0, 60);
     li.title = item.created_at;
     li.addEventListener("click", () => {
-      responseEl.textContent = `You: ${item.prompt}\n\nNova: ${item.response}`;
+      renderChat(item.prompt, item.response);
     });
     chatListEl.appendChild(li);
-  }
+  });
 }
 
-// Chat submit
+// 💬 Chat submit
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!currentUser) return alert("Please sign in first.");
   const prompt = promptInput.value.trim();
   if (!prompt) return;
 
-  responseEl.textContent = "Thinking...";
+  renderTyping();
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -87,12 +93,12 @@ chatForm.addEventListener("submit", async (e) => {
     })
   });
   const data = await res.json();
-  responseEl.textContent = data.response;
+  renderChat(prompt, data.response);
   promptInput.value = "";
   loadChats();
 });
 
-// Search submit
+// 🔍 Search submit
 searchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const q = searchInput.value.trim();
@@ -106,3 +112,19 @@ searchForm.addEventListener("submit", async (e) => {
     searchResultEl.textContent = data.summary || "No result.";
   }
 });
+
+// 🧠 Render chat
+function renderChat(prompt, response) {
+  chatLog.innerHTML = `
+    <div class="bubble user">🧑 You: ${prompt}</div>
+    <div class="bubble nova">✨ Nova: ${response}</div>
+  `;
+}
+
+// ⏳ Typing animation
+function renderTyping() {
+  chatLog.innerHTML = `
+    <div class="bubble user">🧑 You: ${promptInput.value}</div>
+    <div class="bubble nova">✨ Nova is thinking...</div>
+  `;
+}
