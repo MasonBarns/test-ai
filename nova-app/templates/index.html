@@ -3,18 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <title>Nova</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/static/style.css" />
+
+  <!-- Firebase SDKs (modular v9) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>Talk to Nova</h1>
-    <form id="chat-form">
-      <input type="email" id="email" placeholder="Your email" required />
-      <input type="text" id="prompt" placeholder="Ask Nova anything..." required />
-      <button type="submit">Send</button>
-    </form>
-    <div id="response"></div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">Nova</div>
+      <div class="auth">
+        <button id="login-btn" class="btn primary">Sign in with Google</button>
+        <div id="user-info" class="user-info"></div>
+      </div>
+      <div class="history">
+        <h3>Recent chats</h3>
+        <ul id="chat-list"></ul>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <form id="search-form">
+          <input id="search-input" placeholder="Search Wikipedia for verified info..." />
+          <button class="btn">Search</button>
+        </form>
+        <div id="search-result" class="search-result"></div>
+      </div>
+
+      <section class="chat">
+        <form id="chat-form" class="chat-form" style="display:none;">
+          <input type="text" id="prompt" placeholder="Ask Nova anything..." required />
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+        <div id="response" class="response"></div>
+      </section>
+    </main>
   </div>
-  <script src="/static/script.js"></script>
+
+  <script src="/static/script.js" type="module"></script>
 </body>
 </html>

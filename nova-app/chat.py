@@ -1,71 +1,47 @@
-# chat.py
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
-import requests
-from auth import register_user, get_user_history, save_to_history
+from fastapi import APIRouter, Form, HTTPException
+import httpx
+import os
+from db import save_chat, list_chats
 
 router = APIRouter()
 
-# API keys
-LANGSEARCH_API_KEY = "sk-dcb31d322a8e4cda94ad1d1630afb5af"
-OPENROUTER_API_KEY = "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"
-OPENROUTER_MODEL = "mistralai/mistral-7b-instruct"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-def search_langsearch(query):
-    url = "https://api.langsearch.com/search"
-    headers = {
-        "Authorization": f"Bearer {LANGSEARCH_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "query": query,
-        "num_results": 1
-    }
-    try:
-        res = requests.post(url, headers=headers, json=payload)
-        data = res.json()
-        if "results" in data and data["results"]:
-            return data["results"][0]["content"]
-    except Exception as e:
-        print("LangSearch error:", e)
-    return None
+@router.post("/chat")
+async def chat(
+    prompt: str = Form(...),
+    user_id: str = Form(...),
+    email: str = Form("")
+):
+    if not OPENROUTER_API_KEY:
+        raise HTTPException(status_code=500, detail="OpenRouter API key not configured")
 
-def fallback_openrouter(prompt):
-    url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json"
     }
+
     payload = {
-        "model": OPENROUTER_MODEL,
+        "model": "openchat/openchat-3.5-1210",
         "messages": [
+            {"role": "system", "content":
+             "You are Nova. Be concise, accurate, and warm. If you don’t know, say so. Avoid speculation."},
             {"role": "user", "content": prompt}
         ]
     }
-    try:
-        res = requests.post(url, headers=headers, json=payload)
-        data = res.json()
-        return data["choices"][0]["message"]["content"]
-    except Exception as e:
-        print("OpenRouter error:", e)
-        return "Nova couldn't generate a response."
 
-@router.post("/chat")
-async def chat(request: Request):
-    data = await request.json()
-    email = data.get("email")
-    prompt = data.get("prompt")
+    async with httpx.AsyncClient(timeout=60) as client:
+        r = await client.post(OPENROUTER_URL, headers=headers, json=payload)
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"LLM error: {r.text}")
+        data = r.json()
+        reply = data["choices"][0]["message"]["content"]
 
-    if not email or not prompt:
-        return JSONResponse(content={"error": "Missing email or prompt"}, status_code=400)
+    # Save chat
+    save_chat(user_id=user_id, email=email, prompt=prompt, response=reply)
+    return {"response": reply}
 
-    register_user(email)
-
-    response = search_langsearch(prompt)
-    if not response or response.strip() == "":
-        response = fallback_openrouter(prompt)
-
-    save_to_history(email, prompt, response)
-    history = get_user_history(email)
-
-    return JSONResponse(content={"response": response, "history": history})
+@router.get("/chats")
+async def chats(user_id: str):
+    return {"items": list_chats(user_id)}

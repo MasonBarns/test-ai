@@ -15,4 +15,3 @@ routes:
 
 env:
   OPENROUTER_API_KEY: "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"
-  NOVA_PERSONA: "default"
