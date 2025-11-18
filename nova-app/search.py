@@ -3,7 +3,6 @@ import httpx
 
 router = APIRouter()
 
-# Simple truth-first search using Wikipedia summaries
 @router.get("/search")
 async def search(q: str = Query(..., min_length=2)):
     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{q.replace(' ', '_')}"

@@ -43,4 +43,5 @@ def list_chats(user_id: str, limit: int = 25):
     con.close()
     return [
         {"id": r[0], "prompt": r[1], "response": r[2], "created_at": r[3]}
-    for r in rows]
+        for r in rows
+    ]

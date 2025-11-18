@@ -1,32 +1,34 @@
-from fastapi import APIRouter, Form, HTTPException
-import httpx
-import os
+from fastapi import APIRouter, Form, Depends, HTTPException
+import httpx, os
 from db import save_chat, list_chats
+from auth import verify_firebase_id_token
 
 router = APIRouter()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+MODEL = os.getenv("OPENROUTER_MODEL", "openchat/openchat-3.5-1210")
+
+async def get_user(auth_token: str = Form(...)):
+    user = await verify_firebase_id_token(auth_token)
+    return user
 
 @router.post("/chat")
 async def chat(
     prompt: str = Form(...),
-    user_id: str = Form(...),
-    email: str = Form("")
+    user = Depends(get_user)
 ):
     if not OPENROUTER_API_KEY:
-        raise HTTPException(status_code=500, detail="OpenRouter API key not configured")
+        raise HTTPException(status_code=500, detail="LLM key not configured")
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json"
     }
-
     payload = {
-        "model": "openchat/openchat-3.5-1210",
+        "model": MODEL,
         "messages": [
-            {"role": "system", "content":
-             "You are Nova. Be concise, accurate, and warm. If you don’t know, say so. Avoid speculation."},
+            {"role": "system", "content": "You are Nova: concise, accurate, grounded. If unsure, say so."},
             {"role": "user", "content": prompt}
         ]
     }
@@ -38,10 +40,10 @@ async def chat(
         data = r.json()
         reply = data["choices"][0]["message"]["content"]
 
-    # Save chat
-    save_chat(user_id=user_id, email=email, prompt=prompt, response=reply)
+    save_chat(user_id=user["uid"], email=user.get("email", ""), prompt=prompt, response=reply)
     return {"response": reply}
 
 @router.get("/chats")
-async def chats(user_id: str):
-    return {"items": list_chats(user_id)}
+async def chats(auth_token: str):
+    user = await verify_firebase_id_token(auth_token)
+    return {"items": list_chats(user_id=user["uid"])}

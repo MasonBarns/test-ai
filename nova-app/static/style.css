@@ -21,7 +21,6 @@ body {
   overflow: hidden;
 }
 
-/* === Layout === */
 .nova-container {
   display: flex;
   flex-direction: row;
@@ -29,7 +28,7 @@ body {
   height: 100%;
 }
 
-/* === Sidebar === */
+/* Sidebar */
 .sidebar {
   width: 280px;
   background: var(--panel);
@@ -46,9 +45,7 @@ body {
   color: var(--primary);
 }
 
-.auth .btn {
-  width: 100%;
-}
+.auth .btn { width: 100%; }
 
 .user-info {
   font-size: 12px;
@@ -82,7 +79,7 @@ body {
   background: #0f141b;
 }
 
-/* === Main Panel === */
+/* Main */
 .main {
   flex: 1;
   display: flex;
@@ -92,7 +89,7 @@ body {
   overflow-y: auto;
 }
 
-/* === Chat Window === */
+/* Chat window */
 .chat-window {
   flex: 1;
   display: flex;
@@ -109,7 +106,7 @@ body {
   background: var(--panel);
 }
 
-/* === Chat Bubbles === */
+/* Bubbles */
 .bubble {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -118,22 +115,15 @@ body {
   margin-bottom: 10px;
   animation: fadeIn 0.3s ease-in-out;
 }
+.bubble.user { border-left: 4px solid var(--primary); }
+.bubble.nova { border-left: 4px solid var(--accent); }
 
-.bubble.user {
-  border-left: 4px solid var(--primary);
-}
-
-.bubble.nova {
-  border-left: 4px solid var(--accent);
-}
-
-/* === Chat Form === */
+/* Form */
 .chat-form {
   display: flex;
   gap: 10px;
   margin-top: 10px;
 }
-
 input {
   flex: 1;
   padding: 12px;
@@ -152,26 +142,17 @@ input {
   cursor: pointer;
   transition: background 0.2s ease;
 }
-.btn:hover {
-  background: #11161f;
-}
-.btn.primary {
-  background: var(--primary);
-  border: none;
-  color: white;
-}
-.btn.primary:hover {
-  background: #4090ff;
-}
+.btn:hover { background: #11161f; }
+.btn.primary { background: var(--primary); border: none; color: white; }
+.btn.primary:hover { background: #4090ff; }
 
-/* === Search Bar === */
+/* Search */
 .search-bar {
   background: var(--panel);
   padding: 12px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
 }
-
 .search-result {
   margin-top: 12px;
   background: var(--bg);
@@ -180,23 +161,19 @@ input {
   padding: 12px;
 }
 
-/* === Animations === */
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* === Responsive === */
+/* Responsive */
 @media (max-width: 768px) {
-  .nova-container {
-    flex-direction: column;
-  }
+  .nova-container { flex-direction: column; }
   .sidebar {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
-  .main {
-    padding: 12px;
-  }
+  .main { padding: 12px; }
 }
