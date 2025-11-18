@@ -6,19 +6,23 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-// Replace with your Firebase config
+// ✅ Firebase config (your actual values)
 const firebaseConfig = {
-  apiKey: "<YOUR_API_KEY>",
-  authDomain: "<YOUR_AUTH_DOMAIN>",
-  projectId: "<YOUR_PROJECT_ID>",
-  appId: "<YOUR_APP_ID>"
+  apiKey: "AIzaSyChn3iQif3yfdMtL64bc0ko6CdHVJxYvSY",
+  authDomain: "nova-ai-d6b62.firebaseapp.com",
+  projectId: "nova-ai-d6b62",
+  storageBucket: "nova-ai-d6b62.appspot.com",
+  messagingSenderId: "895427215517",
+  appId: "1:895427215517:web:88b5ef22daf94d3dbad474",
+  measurementId: "G-FMYJS6J6JJ"
 };
 
+// 🔧 Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Elements
+// 🌐 DOM elements
 const loginBtn = document.getElementById("login-btn");
 const userInfoEl = document.getElementById("user-info");
 const chatForm = document.getElementById("chat-form");
@@ -31,17 +35,16 @@ const searchResultEl = document.getElementById("search-result");
 
 let currentUser = null;
 
-// Login
+// 🔐 Login
 loginBtn.addEventListener("click", async () => {
   try {
-    const result = await signInWithPopup(auth, provider);
-    currentUser = result.user;
+    await signInWithPopup(auth, provider);
   } catch (err) {
     alert("Login failed: " + err.message);
   }
 });
 
-// Auth state
+// 🔄 Auth state
 onAuthStateChanged(auth, (user) => {
   currentUser = user || null;
   if (user) {
@@ -58,56 +61,53 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Load chats
+// 📚 Load recent chats
 async function loadChats() {
   if (!currentUser) return;
-  const res = await fetch(`/api/chats?auth_token=${encodeURIComponent(await currentUser.getIdToken())}`);
-  if (!res.ok) {
-    console.error("Failed to load chats");
-    return;
+  const token = await currentUser.getIdToken();
+  try {
+    const res = await fetch(`/api/chats?auth_token=${encodeURIComponent(token)}`);
+    const data = await res.json();
+    chatListEl.innerHTML = "";
+    data.items.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item.prompt.slice(0, 60);
+      li.title = item.created_at;
+      li.addEventListener("click", () => renderChat(item.prompt, item.response));
+      chatListEl.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Failed to load chats:", err);
   }
-  const data = await res.json();
-  chatListEl.innerHTML = "";
-  data.items.forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = item.prompt.slice(0, 60);
-    li.title = item.created_at;
-    li.addEventListener("click", () => renderChat(item.prompt, item.response));
-    chatListEl.appendChild(li);
-  });
 }
 
-// Chat submit
+// 💬 Chat submit
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!currentUser) return alert("Please sign in first.");
   const prompt = promptInput.value.trim();
   if (!prompt) return;
 
-  renderTyping();
+  renderTyping(prompt);
   const token = await currentUser.getIdToken();
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      prompt,
-      auth_token: token
-    })
-  });
 
-  if (!res.ok) {
-    const errText = await res.text();
-    renderChat(prompt, "Sorry, something went wrong.\n" + errText);
-    return;
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ prompt, auth_token: token })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    renderChat(prompt, data.response);
+    promptInput.value = "";
+    loadChats();
+  } catch (err) {
+    renderChat(prompt, "⚠️ Error: " + err.message);
   }
-
-  const data = await res.json();
-  renderChat(prompt, data.response);
-  promptInput.value = "";
-  loadChats();
 });
 
-// Search submit with robust error handling
+// 🔍 Search submit
 searchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const q = searchInput.value.trim();
@@ -127,19 +127,23 @@ searchForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Render helpers
+// 🧠 Render helpers
 function renderChat(prompt, response) {
   chatLog.innerHTML = `
     <div class="bubble user">🧑 You: ${escapeHtml(prompt)}</div>
     <div class="bubble nova">✨ Nova: ${escapeHtml(response)}</div>
   `;
 }
-function renderTyping() {
+
+function renderTyping(prompt) {
   chatLog.innerHTML = `
-    <div class="bubble user">🧑 You: ${escapeHtml(promptInput.value)}</div>
+    <div class="bubble user">🧑 You: ${escapeHtml(prompt)}</div>
     <div class="bubble nova">✨ Nova is thinking...</div>
   `;
 }
+
 function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return s.replace(/[&<>"']/g, (c) => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
 }
